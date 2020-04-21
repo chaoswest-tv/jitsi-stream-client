@@ -27,7 +27,7 @@ const options = {
 const options = {
     hosts: {
         domain: 'meet.theater.digital',
-        muc: 'meet.theater.digital' // FIXME: use XEP-0030
+        muc: 'conference.meet.theater.digital' // FIXME: use XEP-0030
     },
     bosh: 'https://meet.theater.digital/http-bind', // FIXME: use xep-0156 for that
 
