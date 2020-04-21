@@ -39,7 +39,7 @@ const remoteTracks = {};
  * @param tracks Array with JitsiTrack objects
  */
 function onLocalTracks(tracks) {
-    localTracks = tracks;
+    //localTracks = tracks;
     for (let i = 0; i < localTracks.length; i++) {
         localTracks[i].addEventListener(
             JitsiMeetJS.events.track.TRACK_AUDIO_LEVEL_CHANGED,
@@ -294,6 +294,7 @@ JitsiMeetJS.createLocalTracks({ devices: [ 'audio', 'video' ] })
     .catch(error => {
         throw error;
     });
+
 
 if (JitsiMeetJS.mediaDevices.isDeviceChangeAvailable('output')) {
     JitsiMeetJS.mediaDevices.enumerateDevices(devices => {
