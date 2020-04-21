@@ -12,12 +12,24 @@ const options = {
     clientNode: 'http://jitsi.org/jitsimeet'
 }; */
 
+/*
 const options = {
     hosts: {
         domain: 'beta.meet.jit.si',
         muc: 'conference.beta.meet.jit.si' // FIXME: use XEP-0030
     },
     bosh: 'https://beta.meet.jit.si/http-bind', // FIXME: use xep-0156 for that
+
+    // The name of client node advertised in XEP-0115 'c' stanza
+    clientNode: 'http://jitsi.org/jitsimeet'
+};*/
+
+const options = {
+    hosts: {
+        domain: 'meet.theater.digital',
+        muc: 'meet.theater.digital' // FIXME: use XEP-0030
+    },
+    bosh: 'https://meet.theater.digital/http-bind', // FIXME: use xep-0156 for that
 
     // The name of client node advertised in XEP-0115 'c' stanza
     clientNode: 'http://jitsi.org/jitsimeet'
@@ -39,7 +51,7 @@ const remoteTracks = {};
  * @param tracks Array with JitsiTrack objects
  */
 function onLocalTracks(tracks) {
-    //localTracks = tracks;
+    localTracks = tracks;
     for (let i = 0; i < localTracks.length; i++) {
         localTracks[i].addEventListener(
             JitsiMeetJS.events.track.TRACK_AUDIO_LEVEL_CHANGED,
@@ -140,7 +152,7 @@ function onUserLeft(id) {
  * That function is called when connection is established successfully
  */
 function onConnectionSuccess() {
-    room = connection.initJitsiConference('testfoobar', confOptions);
+    room = connection.initJitsiConference('tt-test1', confOptions);
     room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);
     room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, track => {
         console.log(`track removed!!!${track}`);
