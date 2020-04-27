@@ -79,10 +79,9 @@ function onRemoteTrackRemove(track) {
         console.log(`detaching ${type} track from ${participant}`);
         tracks[participant][type].detach($(`.video-${trackMapping[participant]} ${type}`)[0]);
     }
+    delete tracks[participant][type];
     if(!tracks[participant].audio && !tracks[participant].video) {
         delete tracks[participant]
-    } else {
-        delete tracks[participant][type];
     }
 }
 
@@ -153,17 +152,17 @@ function detachUser(id) {
     if (trackMapping[id] != null) {
         console.log("detaching user " + id);
         if(tracks[id].video) {
-            tracks[id].video.detach($(`.video-${trackMapping[id].position} video`)[0]);
+            tracks[id].video.detach($(`.video-${trackMapping[id]} video`)[0]);
         }
         if(tracks[id].audio) {
-            tracks[id].audio.detach($(`.video-${trackMapping[id].position} audio`)[0]);
+            tracks[id].audio.detach($(`.video-${trackMapping[id]} audio`)[0]);
         }
         delete trackMapping[id]
     }
 }
 function attachUser(id, position) {
-    if (trackMapping[id] != null) {
-        console.log("attaching user " + id);
+    if (trackMapping[id] == null && tracks[id] != null) {
+        console.log(`attaching user ${id} to ${position}`);
         trackMapping[id] = position;
         if (tracks[id].video) {
             let elemID = `.video-${position} video`;
@@ -177,14 +176,14 @@ function attachUser(id, position) {
 }
 
 /**
- * That function is called when connection is established successfully
+ * Enables the connect button, so that we can join a room
  */
 function onConnectionSuccess() {
-    $('#roomnamebutton').prop('disabled', false);
+    $('#room-name-button').prop('disabled', false);
 }
 
 /**
- *
+ * Resizes the video element according to maximum available width and height. Respects input aspect ratio.
  */
 function onVideoResize(event) {
     const video = $(event.target)[0];
@@ -206,26 +205,8 @@ function onVideoResize(event) {
     video.height = targetHeight;
 }
 
-$(document).ready(function() {
-    let audio = $('audio');
-    for(let i in audio) {
-        if(!audio.hasOwnProperty(i)) {
-            continue;
-        }
-        audio[i].volume = 0.7;
-    }
-    let video = $('.video');
-    for(let i in video) {
-        if(!video.hasOwnProperty(i)) {
-            continue;
-        }
-        $(video[i]).find('input')[0].value = remoteMappingName[i];
-        $(video[i]).find('video').on('resize', onVideoResize).width(videoSize.width).height(videoSize.height);
-    }
-});
-
 /**
- * This function is called when we disconnect.
+ * This function is called when we disconnect. It removes the Listeners.
  */
 function disconnect() {
     console.log('disconnect!');
@@ -237,8 +218,11 @@ function disconnect() {
         disconnect);
 }
 
+/**
+ * Connects the interface to a conference room, sets up the listeners..
+ */
 function connect() {
-    const roomName = $('#roomname').val();
+    const roomName = $('#room-name').val();
 
     room = connection.initJitsiConference(roomName, confOptions);
     room.setDisplayName("Streamer");
@@ -248,42 +232,62 @@ function connect() {
     room.on(JitsiMeetJS.events.conference.USER_JOINED, onUserJoin);
     room.on(JitsiMeetJS.events.conference.USER_LEFT, onUserLeft);
     room.on(JitsiMeetJS.events.conference.DISPLAY_NAME_CHANGED, onNameChange);
-    room.join();
-    $('#roomselector').hide();
+    room.join($('#room-password').val());
+    $('#room-selector').hide();
     $('#room').show();
+
+    let video = $('.video');
+    for(let i = 0; i<video.length; i++) {
+        if(!video.hasOwnProperty(i)) {
+            continue;
+        }
+        $(video[i]).find('input')[0].value = remoteMappingName[i];
+        $('.volume-' + i + ' .name').text(remoteMappingName[i]);
+        $(video[i]).find('video').on('resize', onVideoResize).width(videoSize.width).height(videoSize.height);
+    }
 }
 
 /**
- *
+ * Disconnects everything
  */
 function unload() {
     room.leave();
     connection.disconnect();
 }
 
-
+/**
+ * Sets the Outputlevel of an audio source
+ * @param id
+ * @param level
+ */
 function setLevel(id, level) {
     console.log(`setting volume of ${id} to ${level*100}%`);
     let track = $(`.video-${id} audio`)[0];
+    let volumeLabel = $('.volume-' + id + ' .volume');
     track.volume = level;
+    volumeLabel.text(Math.round(level*100) + "%")
 }
 
+/**
+ * Sets the name of a position
+ * @param position
+ * @param name
+ */
 function setName(position, name) {
     console.log(`setting name of ${position} to ${name}`);
     remoteMappingName[position] = name;
     for(let i in trackMapping) {
         if(trackMapping[i] === position) {
-            detachUser(i)
+            detachUser(i);
+            break;
         }
     }
-    for(let i in nameMapping) {
-        if(nameMapping[i] != null) {
-            attachUser(nameMapping[i], position)
-        }
+    if(nameMapping[name] != null) {
+        attachUser(nameMapping[name], position)
     }
 }
 /**
- *
+ * Sets the output to the selected outputsource
  * @param selected
  */
 function changeAudioOutput(selected) { // eslint-disable-line no-unused-vars
@@ -294,9 +298,8 @@ $(window).bind('beforeunload', unload);
 $(window).bind('unload', unload);
 
 JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
-const initOptions = {};
 
-JitsiMeetJS.init(initOptions);
+JitsiMeetJS.init({});
 
 connection = new JitsiMeetJS.JitsiConnection(null, null, options);
 
