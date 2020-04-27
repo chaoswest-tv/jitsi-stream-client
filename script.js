@@ -116,7 +116,7 @@ function onUserJoin(id, user) {
  */
 function onNameChange(participant, displayName) {
 
-    nameMapping[displayName] = id;
+    nameMapping[displayName] = participant;
     // detach this user from current position
     detachUser(participant);
     let position = remoteMappingName.indexOf(displayName);
