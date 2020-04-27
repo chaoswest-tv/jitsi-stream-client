@@ -8,14 +8,18 @@
     <script src="libs/strophe/strophe.disco.min.js?v=1"></script>
     <link rel="stylesheet" href="libs/bootstrap.min.css">
     <script src="libs/lib-jitsi-meet.min.js"></script>
-    <script src="example.js" ></script>
+    <script src="script.js" ></script>
     <style type="text/css">
         body {
-            padding: 12px;
+            padding: 6px;
         }
         video {
             display: block;
             margin: 0 auto;
+            border: 1px solid black;
+        }
+        .container-fluid {
+            padding: 0;
         }
         .col-md-4 {
             padding: 0 !important;
@@ -26,56 +30,90 @@
             margin: 0 !important;
         }
         .video {
-            height: 384px;
             text-align: center;
         }
     </style>
 </head>
 <body>
+<div id="roomselector">
+    <input type="text" id="roomname" />
+    <button onclick="connect()" disabled id="roomnamebutton">Connect</button>
+</div>
+<div style="display: none" id="room">
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-4 video video-0">
-                <video autoplay='autoplay' width="640" height="360"></video>
+                <video autoplay='autoplay'></video>
                 <audio autoplay='autoplay'></audio>
-                <span></span>
+                <input type="text" onchange="setName(0, this.value)">
             </div>
             <div class="col-md-4 video video-1">
-                <video autoplay='autoplay' width="640" height="360"></video>
+                <video autoplay='autoplay'></video>
                 <audio autoplay='autoplay'></audio>
+                <input type="text" onchange="setName(1, this.value)">
                 <span></span>
             </div>
             <div class="col-md-4 video video-2">
-                <video autoplay='autoplay' width="640" height="360"></video>
+                <video autoplay='autoplay'></video>
                 <audio autoplay='autoplay'></audio>
+                <input type="text" onchange="setName(2, this.value)">
                 <span></span>
             </div>
         </div>
         <div class="row">
             <div class="col-md-4 video video-3">
-                <video autoplay='autoplay' width="640" height="360"></video>
+                <video autoplay='autoplay'></video>
                 <audio autoplay='autoplay'></audio>
+                <input type="text" onchange="setName(3, this.value)">
                 <span></span>
             </div>
             <div class="col-md-4 video video-4">
-                <video autoplay='autoplay' width="640" height="360"></video>
+                <video autoplay='autoplay'></video>
                 <audio autoplay='autoplay'></audio>
+                <input type="text" onchange="setName(4, this.value)">
                 <span></span>
             </div>
             <div class="col-md-4 video video-5">
-                <video autoplay='autoplay' width="640" height="360"></video>
+                <video autoplay='autoplay'></video>
                 <audio autoplay='autoplay'></audio>
+                <input type="text" onchange="setName(5, this.value)">
                 <span></span>
             </div>
         </div>
     </div>
+    <div class="volume-slider">
+        <span class="volume">70%</span>
+        <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(0, this.value)">
+        <span class="name"></span>
+    </div>
+    <div class="volume-slider">
+        <span class="volume">70%</span>
+        <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(1, this.value)">
+        <span class="name"></span>
+    </div>
+    <div class="volume-slider">
+        <span class="volume">70%</span>
+        <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(2, this.value)">
+        <span class="name"></span>
+    </div>
+    <div class="volume-slider">
+        <span class="volume">70%</span>
+        <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(3, this.value)">
+        <span class="name"></span>
+    </div>
+    <div class="volume-slider">
+        <span class="volume">70%</span>
+        <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(4, this.value)">
+        <span class="name"></span>
+    </div>
+    <div class="volume-slider">
+        <span class="volume">70%</span>
+        <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(5, this.value)">
+        <span class="name"></span>
+    </div>
+</div>
 
 
-    <input type="range" min="0" max="1" step="0.01" value="0.7" onchange="setLevel(0, this.value)">
-    <input type="range" min="0" max="1" step="0.01" value="0.7" onchange="setLevel(1, this.value)">
-    <input type="range" min="0" max="1" step="0.01" value="0.7" onchange="setLevel(2, this.value)">
-    <input type="range" min="0" max="1" step="0.01" value="0.7" onchange="setLevel(3, this.value)">
-    <input type="range" min="0" max="1" step="0.01" value="0.7" onchange="setLevel(4, this.value)">
-    <input type="range" min="0" max="1" step="0.01" value="0.7" onchange="setLevel(5, this.value)">
     <div id="audioOutputSelectWrapper" style="display: none;">
         Change audio output device
         <select id="audioOutputSelect" onchange="changeAudioOutput(this)"></select>

@@ -11,10 +11,9 @@ const confOptions = {
 };
 
 const videoSize = {
-    width: 640,
-    height: 360
+    width: 624,
+    height: 351
 };
-const roomName = 'tt-test2';
 
 let connection = null;
 let isJoined = false;
@@ -29,28 +28,8 @@ let remoteMappingName = [
 let trackMapping = {};
 // alle verfügbaren tracks mit participant id -> {audio: track, video: track}
 let tracks = {};
-
-/**
- * Hinzufügen der Lokalen Tracks zum Stream, wobei ich immernoch meine, das ist überflüssig.
- * @param tracks
- */
-function onLocalTracks(tracks) {
-    localTracks = tracks;
-    for (let i = 0; i < localTracks.length; i++) {
-        if (localTracks[i].getType() === 'video') {
-            $('body').append(`<video autoplay='1' id='localVideo${i}' />`);
-            localTracks[i].attach($(`#localVideo${i}`)[0]);
-        } else {
-            $('body').append(
-                `<audio autoplay='1' muted='true' id='localAudio${i}' />`);
-            localTracks[i].attach($(`#localAudio${i}`)[0]);
-        }
-        if (isJoined) {
-            room.addTrack(localTracks[i]);
-        }
-    }
-}
-
+// name -> id
+let nameMapping = {};
 /**
  *
  * @param participant
@@ -122,7 +101,7 @@ function onConferenceJoined() {
  */
 function onUserJoin(id, user) {
     console.log(`user join - ${user.getDisplayName()}`);
-
+    nameMapping[user.getDisplayName()] = id;
     let position = remoteMappingName.indexOf(user.getDisplayName());
     if(position >= 0) {
         console.log("user found");
@@ -136,6 +115,8 @@ function onUserJoin(id, user) {
  * @param displayName
  */
 function onNameChange(participant, displayName) {
+
+    nameMapping[displayName] = id;
     // detach this user from current position
     detachUser(participant);
     let position = remoteMappingName.indexOf(displayName);
@@ -147,15 +128,7 @@ function onNameChange(participant, displayName) {
                 detachUser(i);
             }
         }
-        trackMapping[participant] = position;
-        if (tracks[participant].video) {
-            let elemID = `.video-${position} video`;
-            tracks[participant].video.attach($(elemID)[0]);
-        }
-        if(tracks[participant].audio) {
-            let elemID = `.video-${position} audio`;
-            tracks[participant].audio.attach($(elemID)[0]);
-        }
+        attachUser(participant, position)
     }
 }
 
@@ -168,6 +141,12 @@ function onUserLeft(id) {
     console.log('user left');
     detachUser(id);
     delete tracks[id];
+    for(let i in nameMapping) {
+        if(nameMapping[i] === id) {
+            delete nameMapping[i];
+            break;
+        }
+    }
 }
 
 function detachUser(id) {
@@ -182,20 +161,26 @@ function detachUser(id) {
         delete trackMapping[id]
     }
 }
+function attachUser(id, position) {
+    if (trackMapping[id] != null) {
+        console.log("attaching user " + id);
+        trackMapping[id] = position;
+        if (tracks[id].video) {
+            let elemID = `.video-${position} video`;
+            tracks[id].video.attach($(elemID)[0]);
+        }
+        if(tracks[id].audio) {
+            let elemID = `.video-${position} audio`;
+            tracks[id].audio.attach($(elemID)[0]);
+        }
+    }
+}
 
 /**
  * That function is called when connection is established successfully
  */
 function onConnectionSuccess() {
-    room = connection.initJitsiConference(roomName, confOptions);
-    room.setDisplayName("Streamer");
-    room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);
-    room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, onRemoteTrackRemove);
-    room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, onConferenceJoined);
-    room.on(JitsiMeetJS.events.conference.USER_JOINED, onUserJoin);
-    room.on(JitsiMeetJS.events.conference.USER_LEFT, onUserLeft);
-    room.on(JitsiMeetJS.events.conference.DISPLAY_NAME_CHANGED, onNameChange);
-    room.join();
+    $('#roomnamebutton').prop('disabled', false);
 }
 
 /**
@@ -208,8 +193,9 @@ function onVideoResize(event) {
     const aspectRatio = width/height;
     console.log(`${aspectRatio} is the aspect ratio`);
 
-    let targetWidth = 640;
-    let targetHeight = 360;
+    let targetWidth = videoSize.width;
+    let targetHeight = videoSize.height
+    ;
     if(width > videoSize.width) {
         targetHeight *= videoSize.width / width
     }
@@ -233,8 +219,8 @@ $(document).ready(function() {
         if(!video.hasOwnProperty(i)) {
             continue;
         }
-        $(video[i]).find('span').text(remoteMappingName[i]);
-        $(video[i]).find('video').on('resize', onVideoResize);
+        $(video[i]).find('input')[0].value = remoteMappingName[i];
+        $(video[i]).find('video').on('resize', onVideoResize).width(videoSize.width).height(videoSize.height);
     }
 });
 
@@ -251,6 +237,22 @@ function disconnect() {
         disconnect);
 }
 
+function connect() {
+    const roomName = $('#roomname').val();
+
+    room = connection.initJitsiConference(roomName, confOptions);
+    room.setDisplayName("Streamer");
+    room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);
+    room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, onRemoteTrackRemove);
+    room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, onConferenceJoined);
+    room.on(JitsiMeetJS.events.conference.USER_JOINED, onUserJoin);
+    room.on(JitsiMeetJS.events.conference.USER_LEFT, onUserLeft);
+    room.on(JitsiMeetJS.events.conference.DISPLAY_NAME_CHANGED, onNameChange);
+    room.join();
+    $('#roomselector').hide();
+    $('#room').show();
+}
+
 /**
  *
  */
@@ -261,8 +263,24 @@ function unload() {
 
 
 function setLevel(id, level) {
-    let track = $(`#audio-${id}`)[0];
+    console.log(`setting volume of ${id} to ${level*100}%`);
+    let track = $(`.video-${id} audio`)[0];
     track.volume = level;
+}
+
+function setName(position, name) {
+    console.log(`setting name of ${position} to ${name}`);
+    remoteMappingName[position] = name;
+    for(let i in trackMapping) {
+        if(trackMapping[i] === position) {
+            detachUser(i)
+        }
+    }
+    for(let i in nameMapping) {
+        if(nameMapping[i] != null) {
+            attachUser(nameMapping[i], position)
+        }
+    }
 }
 /**
  *
@@ -290,13 +308,6 @@ connection.addEventListener(
     disconnect);
 
 connection.connect();
-
-JitsiMeetJS.createLocalTracks({ devices: [ 'audio', 'video' ] })
-    .then(onLocalTracks)
-    .catch(error => {
-        throw error;
-    });
-
 
 if (JitsiMeetJS.mediaDevices.isDeviceChangeAvailable('output')) {
     JitsiMeetJS.mediaDevices.enumerateDevices(devices => {
