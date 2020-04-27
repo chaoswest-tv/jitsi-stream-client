@@ -30,6 +30,16 @@ let trackMapping = {};
 let tracks = {};
 // name -> id
 let nameMapping = {};
+
+function selectParticipants() {
+    let part = [];
+    for(let i in trackMapping) {
+        if(trackMapping.hasOwnProperty(i)) {
+            part.push(i)
+        }
+    }
+    room.selectParticipants(part);
+}
 /**
  *
  * @param participant
@@ -104,7 +114,8 @@ function onUserJoin(id, user) {
     let position = remoteMappingName.indexOf(user.getDisplayName());
     if(position >= 0) {
         console.log("user found");
-        trackMapping[id] = position
+        trackMapping[id] = position;
+        selectParticipants();
     }
 }
 
@@ -125,10 +136,12 @@ function onNameChange(participant, displayName) {
         for(let i in trackMapping) {
             if(trackMapping[i] === position) {
                 detachUser(i);
+                break;
             }
         }
         attachUser(participant, position)
     }
+    selectParticipants()
 }
 
 /**
@@ -146,6 +159,7 @@ function onUserLeft(id) {
             break;
         }
     }
+    selectParticipants()
 }
 
 function detachUser(id) {
@@ -261,7 +275,6 @@ function unload() {
  * @param level
  */
 function setLevel(id, level) {
-    console.log(`setting volume of ${id} to ${level*100}%`);
     let track = $(`.video-${id} audio`)[0];
     let volumeLabel = $('.volume-' + id + ' .volume');
     track.volume = level;
@@ -285,6 +298,7 @@ function setName(position, name) {
     if(nameMapping[name] != null) {
         attachUser(nameMapping[name], position)
     }
+    selectParticipants()
 }
 /**
  * Sets the output to the selected outputsource
