@@ -1,3 +1,6 @@
+// DISABLE RIGHTCLICK
+document.addEventListener('contextmenu', event => event.preventDefault());
+
 const options = {
     serviceUrl: 'https://meet.theater.digital/http-bind',
     hosts: {
@@ -288,13 +291,12 @@ function connect(e) {
     $('#room-selector').hide();
     $('#room').show();
 
-    let video = $('.video');
-    for(let i = 0; i<video.length; i++) {
-        if(!video.hasOwnProperty(i)) {
-            continue;
-        }
+    // initiaize fields with values
+    for(let i = 0; i<remoteMappingName.length; i++) {
+        $('.volume-' + i + ' input[type="text"]').val(remoteMappingName[i]);
         $('.volume-' + i + ' input[type="range"]').val(0.7);
-        $(video[i]).find('video').on('resize', onVideoResize).width(videoSize.width).height(videoSize.height);
+        $('.video-' + i + ' video').on('resize', onVideoResize).width(videoSize.width).height(videoSize.height);
+        $('.video-' + i + ' span').text(remoteMappingName[i]);
     }
 }
 
@@ -342,7 +344,16 @@ function setName(position, name) {
             break;
         }
     }
-    selectParticipants()
+    selectParticipants();
+    window.localStorage.setItem('remoteMappingName', JSON.stringify(remoteMappingName));
+}
+
+function reload(position) {
+    for(let i in tracks) {
+        if(tracks.hasOwnProperty(i) && tracks[i].position === position) {
+            attachUser(i, position);
+        }
+    }
 }
 
 function updateParticipantList() {
@@ -390,4 +401,8 @@ if (JitsiMeetJS.mediaDevices.isDeviceChangeAvailable('output')) {
             $('#audioOutputSelectWrapper').show();
         }
     });
+}
+
+if(window.localStorage.getItem('remoteMappingName') !== null) {
+    remoteMappingName = JSON.parse(window.localStorage.getItem('remoteMappingName'));
 }
