@@ -27,12 +27,8 @@ let remoteMappingName = [
 ];
 // track mapping participant id -> position
 let trackMapping = {};
-// alle verfügbaren tracks mit participant id -> {audio: track, video: track}
+// alle verfügbaren tracks mit participant id -> {audio: track, video: track, name: string}
 let tracks = {};
-// name -> id
-let nameMapping = {};
-
-let connectedUsers = [];
 
 /**
  *
@@ -152,15 +148,13 @@ function onConferenceJoined() {
  */
 function onUserJoin(id, user) {
     console.log(`user join - ${user.getDisplayName()}`);
-    nameMapping[user.getDisplayName()] = id;
-    connectedUsers.push(user.getDisplayName());
-    $('.available-users').text(connectedUsers.join(', '));
     let position = remoteMappingName.indexOf(user.getDisplayName());
     if(position >= 0) {
         console.log("user found");
         trackMapping[id] = position;
         selectParticipants();
     }
+    updateParticipantList();
 }
 
 /**
@@ -170,7 +164,6 @@ function onUserJoin(id, user) {
  */
 function onNameChange(participant, displayName) {
 
-    nameMapping[displayName] = participant;
     // detach this user from current position
     detachUser(participant);
     let position = remoteMappingName.indexOf(displayName);
@@ -185,7 +178,8 @@ function onNameChange(participant, displayName) {
         }
         attachUser(participant, position)
     }
-    selectParticipants()
+    selectParticipants();
+    updateParticipantList();
 }
 
 /**
@@ -196,16 +190,8 @@ function onNameChange(participant, displayName) {
 function onUserLeft(id) {
     console.log('user left');
     detachUser(id);
-
     delete tracks[id];
-    for(let i in nameMapping) {
-        if(nameMapping[i] === id) {
-            connectedUsers.filter(u => u!==i);
-            $('.available-users').text(connectedUsers.join(', '));
-            delete nameMapping[i];
-            break;
-        }
-    }
+    updateParticipantList();
     selectParticipants()
 }
 
@@ -359,10 +345,18 @@ function setName(position, name) {
             break;
         }
     }
-    if(nameMapping[name] != null) {
-        attachUser(nameMapping[name], position)
+    let participants = room.getParticipants();
+    for(let i = 0; i < participants.length; i++) {
+        if(participants[i].getDisplayName() === name) {
+            attachUser(participants[i].getId(), position);
+            break;
+        }
     }
     selectParticipants()
+}
+
+function updateParticipantList() {
+    $('.available-users').text(room.getParticipants.map(p => p.getDisplayName()).join(', '));
 }
 /**
  * Sets the output to the selected outputsource
