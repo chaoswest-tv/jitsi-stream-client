@@ -334,7 +334,7 @@ function midiSetLevel(id, level) {
         return;
     }
     setLevel(id, level);
-    $('.volume-' + id + ' input').val(level);
+    $('.volume-' + id + ' input[type="range"]').val(level);
 }
 
 /**
