@@ -32,6 +32,8 @@ let tracks = {};
 // name -> id
 let nameMapping = {};
 
+let connectedUsers = [];
+
 /**
  *
  *              MIDI SECTION
@@ -151,6 +153,8 @@ function onConferenceJoined() {
 function onUserJoin(id, user) {
     console.log(`user join - ${user.getDisplayName()}`);
     nameMapping[user.getDisplayName()] = id;
+    connectedUsers.push(user.getDisplayName());
+    $('.available-users').text(connectedUsers.join(', '));
     let position = remoteMappingName.indexOf(user.getDisplayName());
     if(position >= 0) {
         console.log("user found");
@@ -192,9 +196,12 @@ function onNameChange(participant, displayName) {
 function onUserLeft(id) {
     console.log('user left');
     detachUser(id);
+
     delete tracks[id];
     for(let i in nameMapping) {
         if(nameMapping[i] === id) {
+            connectedUsers.filter(u => u!==i);
+            $('.available-users').text(connectedUsers.join(', '));
             delete nameMapping[i];
             break;
         }
@@ -276,7 +283,7 @@ function disconnect() {
  * Connects the interface to a conference room, sets up the listeners..
  */
 function connect(e) {
-    e.preventDefault()
+    e.preventDefault();
     const roomName = $('#room-name').val();
 
     room = connection.initJitsiConference(roomName, confOptions);
