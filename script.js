@@ -296,6 +296,7 @@ function connect() {
         }
         $(video[i]).find('input')[0].value = remoteMappingName[i];
         $('.volume-' + i + ' .name').text(remoteMappingName[i]);
+        $('.volume-' + i + ' input').val(0.7);
         $(video[i]).find('video').on('resize', onVideoResize).width(videoSize.width).height(videoSize.height);
     }
 }
@@ -341,6 +342,7 @@ function midiSetLevel(id, level) {
 function setName(position, name) {
     console.log(`setting name of ${position} to ${name}`);
     remoteMappingName[position] = name;
+    $('.volume-' + position + ' .name').text(name);
     for(let i in trackMapping) {
         if(trackMapping[i] === position) {
             detachUser(i);
