@@ -25,6 +25,9 @@
             margin: 0 auto;
             border: 1px dotted grey;
         }
+        .volume-slider {
+            text-align: center;
+        }
         .container-fluid {
             padding: 0;
         }
@@ -88,36 +91,77 @@
                 <span></span>
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-4 video video-6">
+                <video autoplay='autoplay'></video>
+                <audio autoplay='autoplay'></audio>
+                <input type="text" onchange="setName(6, this.value)">
+                <span></span>
+            </div>
+            <div class="col-md-4 video video-7">
+                <video autoplay='autoplay'></video>
+                <audio autoplay='autoplay'></audio>
+                <input type="text" onchange="setName(7, this.value)">
+                <span></span>
+            </div>
+            <div class="col-md-4 video video-8">
+                <video autoplay='autoplay'></video>
+                <audio autoplay='autoplay'></audio>
+                <input type="text" onchange="setName(8, this.value)">
+                <span></span>
+            </div>
+        </div>
     </div>
-    <div class="volume-slider volume-0">
-        <span class="volume">70%</span>
-        <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(0, this.value)">
-        <span class="name"></span>
+    <div class="row">
+        <div class="volume-slider volume-0 col">
+            <span class="volume">70%</span>
+            <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(0, this.value)">
+            <span class="name"></span>
+        </div>
+        <div class="volume-slider volume-1 col">
+            <span class="volume">70%</span>
+            <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(1, this.value)">
+            <span class="name"></span>
+        </div>
+        <div class="volume-slider volume-2 col">
+            <span class="volume">70%</span>
+            <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(2, this.value)">
+            <span class="name"></span>
+        </div>
     </div>
-    <div class="volume-slider volume-1">
-        <span class="volume">70%</span>
-        <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(1, this.value)">
-        <span class="name"></span>
+    <div class="row">
+        <div class="volume-slider volume-3 col">
+            <span class="volume">70%</span>
+            <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(3, this.value)">
+            <span class="name"></span>
+        </div>
+        <div class="volume-slider volume-4 col">
+            <span class="volume">70%</span>
+            <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(4, this.value)">
+            <span class="name"></span>
+        </div>
+        <div class="volume-slider volume-5 col">
+            <span class="volume">70%</span>
+            <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(5, this.value)">
+            <span class="name"></span>
+        </div>
     </div>
-    <div class="volume-slider volume-2">
-        <span class="volume">70%</span>
-        <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(2, this.value)">
-        <span class="name"></span>
-    </div>
-    <div class="volume-slider volume-3">
-        <span class="volume">70%</span>
-        <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(3, this.value)">
-        <span class="name"></span>
-    </div>
-    <div class="volume-slider volume-4">
-        <span class="volume">70%</span>
-        <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(4, this.value)">
-        <span class="name"></span>
-    </div>
-    <div class="volume-slider volume-5">
-        <span class="volume">70%</span>
-        <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(5, this.value)">
-        <span class="name"></span>
+    <div class="row">
+        <div class="volume-slider volume-6 col">
+            <span class="volume">70%</span>
+            <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(6, this.value)">
+            <span class="name"></span>
+        </div>
+        <div class="volume-slider volume-7 col">
+            <span class="volume">70%</span>
+            <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(7, this.value)">
+            <span class="name"></span>
+        </div>
+        <div class="volume-slider volume-8 col">
+            <span class="volume">70%</span>
+            <input type="range" min="0" max="1" step="0.01" value="0.7" oninput="setLevel(8, this.value)">
+            <span class="name"></span>
+        </div>
     </div>
 </div>
 

@@ -21,8 +21,9 @@ let room = null;
 
 // zu mappende namen.
 let remoteMappingName = [
-    'alpha', 'beta', 'henne',
-    'delta', 'soeren', 'klaus'
+    'speaker1', 'speaker2', 'speaker3',
+    'speaker4', 'speaker5', 'speaker6',
+    'speaker7', 'speaker8', 'speaker9'
 ];
 // track mapping participant id -> position
 let trackMapping = {};
@@ -31,6 +32,44 @@ let tracks = {};
 // name -> id
 let nameMapping = {};
 
+/**
+ *
+ *              MIDI SECTION
+ */
+let midi, data;
+// start talking to MIDI controller
+if (navigator.requestMIDIAccess) {
+    navigator.requestMIDIAccess({
+        sysex: false
+    }).then(onMIDISuccess);
+} else {
+    console.warn("No MIDI support in your browser")
+}
+
+// on success
+function onMIDISuccess(midiData) {
+    // this is all our MIDI data
+    midi = midiData;
+    let allInputs = midi.inputs.values();
+    // loop over all available inputs and listen for any MIDI input
+    for (let input = allInputs.next(); input && !input.done; input = allInputs.next()) {
+        // when a MIDI value is received call the onMIDIMessage function
+        input.value.onmidimessage = (messageData ) => {
+            midiSetLevel(messageData.data[0]-176, Math.round(messageData[2]/127))
+            console.log(messageData.data);
+        };
+    }
+}
+
+/**
+ *
+ *             END MIDI SECTION
+ *
+ */
+
+/**
+ * Selects all shown participants to receive high quality video. Otherwise Jitsi will only show thumbnail size video to the Streamer
+ */
 function selectParticipants() {
     let part = [];
     for(let i in trackMapping) {
@@ -165,10 +204,10 @@ function onUserLeft(id) {
 function detachUser(id) {
     if (trackMapping[id] != null) {
         console.log("detaching user " + id);
-        if(tracks[id].video) {
+        if(tracks[id] && tracks[id].video) {
             tracks[id].video.detach($(`.video-${trackMapping[id]} video`)[0]);
         }
-        if(tracks[id].audio) {
+        if(tracks[id] && tracks[id].audio) {
             tracks[id].audio.detach($(`.video-${trackMapping[id]} audio`)[0]);
         }
         delete trackMapping[id]
@@ -279,6 +318,19 @@ function setLevel(id, level) {
     let volumeLabel = $('.volume-' + id + ' .volume');
     track.volume = level;
     volumeLabel.text(Math.round(level*100) + "%")
+}
+
+/**
+ * Sets the volume level coming from MIDI input, also sets correct fader position to audio slider
+ * @param id
+ * @param level
+ */
+function midiSetLevel(id, level) {
+    if(id >= remoteMappingName.length) {
+        return;
+    }
+    setLevel(id, level);
+    $('.volume-' + id + ' input').val(level);
 }
 
 /**
