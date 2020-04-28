@@ -46,9 +46,11 @@
 </head>
 <body>
 <div id="room-selector">
-    <input type="text" id="room-name" placeholder="Room name"/><br />
-    <input type="text" id="room-password" placeholder="Room Password" />
-    <button onclick="connect()" disabled id="room-name-button">Connect</button>
+    <form onsubmit="connect(event)">
+        <input type="text" id="room-name" placeholder="Room name"/><br />
+        <input type="text" id="room-password" placeholder="Room Password" />
+        <button disabled id="room-name-button">Connect</button>
+    </form>
 </div>
 <div style="display: none" id="room">
     <div class="container-fluid">

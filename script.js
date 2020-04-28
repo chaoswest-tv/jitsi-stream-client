@@ -56,8 +56,8 @@ function onMIDISuccess(midiData) {
         // when a MIDI value is received call the onMIDIMessage function
         input.value.onmidimessage = (messageData ) => {
             if(messageData.data[0] != 176) return;
-            midiSetLevel(messageData.data[1], Math.round(messageData[2]/127))
-            console.log(messageData.data);
+            if(messageData.data[1] > 7) messageData.data[1] -= 8;
+            midiSetLevel(messageData.data[1], messageData.data[2]/127);
         };
     }
 }
@@ -275,7 +275,8 @@ function disconnect() {
 /**
  * Connects the interface to a conference room, sets up the listeners..
  */
-function connect() {
+function connect(e) {
+    e.preventDefault()
     const roomName = $('#room-name').val();
 
     room = connection.initJitsiConference(roomName, confOptions);
@@ -328,6 +329,7 @@ function setLevel(id, level) {
  * @param level
  */
 function midiSetLevel(id, level) {
+    console.log(id, level);
     if(id >= remoteMappingName.length) {
         return;
     }
