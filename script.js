@@ -20,14 +20,8 @@ let isJoined = false;
 let room = null;
 
 // zu mappende namen.
-let remoteMappingName = [
-    'speaker1', 'speaker2', 'speaker3',
-    'speaker4', 'speaker5', 'speaker6',
-    'speaker7', 'speaker8', 'speaker9'
-];
-// track mapping participant id -> position
-let trackMapping = {};
-// alle verfügbaren tracks mit participant id -> {audio: track, video: track, name: string}
+let remoteMappingName = new Array(9);
+// alle verfügbaren tracks mit id -> {audio: track, video: track, position: number}
 let tracks = {};
 
 /**
@@ -55,7 +49,7 @@ function onMIDISuccess(midiData) {
         input.value.onmidimessage = (messageData ) => {
             if(messageData.data[0] != 176) return;
             if(messageData.data[1] > 7) messageData.data[1] -= 8;
-            midiSetLevel(messageData.data[1], messageData.data[2]/127);
+            setLevel(messageData.data[1], messageData.data[2]/127);
         };
     }
 }
@@ -71,9 +65,11 @@ function onMIDISuccess(midiData) {
  */
 function selectParticipants() {
     let part = [];
-    for(let i in trackMapping) {
-        if(trackMapping.hasOwnProperty(i)) {
-            part.push(i)
+    for(let i in tracks) {
+        if(tracks.hasOwnProperty(i)) {
+            if(tracks[i].position >= 0) {
+                part.push(i)
+            }
         }
     }
     room.selectParticipants(part);
@@ -85,17 +81,16 @@ function selectParticipants() {
  * @param type
  */
 function setRemoteTrack(participant, track, type) {
-    if (trackMapping[participant] == null)
+    if (tracks[participant] == null)
         return;
     console.log(`attaching ${type} track from ${participant}`);
     if (type === 'video') {
-        let elemID = `.video-${trackMapping[participant]} video`;
-        track.attach($(elemID)[0]);
         tracks[participant].video = track;
     } else {
-        let elemID = `.video-${trackMapping[participant]} audio`;
-        track.attach($(elemID)[0]);
         tracks[participant].audio = track;
+    }
+    if(tracks[participant].audio && tracks[participant].video && tracks[participant].position >= 0) {
+        attachUser(participant, tracks[participant].position);
     }
 }
 
@@ -108,9 +103,6 @@ function onRemoteTrack(track) {
         return;
     }
     const participant = track.getParticipantId();
-    if(!tracks[participant]) {
-        tracks[participant] = {};
-    }
     tracks[participant][track.getType()] = track;
     setRemoteTrack(participant, track, track.getType());
 }
@@ -123,14 +115,11 @@ function onRemoteTrack(track) {
 function onRemoteTrackRemove(track) {
     const participant = track.getParticipantId();
     const type = track.getType();
-    if(trackMapping[participant] != null && tracks[participant][type]) {
+    if(tracks[participant] != null && tracks[participant][type]) {
         console.log(`detaching ${type} track from ${participant}`);
-        tracks[participant][type].detach($(`.video-${trackMapping[participant]} ${type}`)[0]);
+        tracks[participant][type].detach($(`.video-${tracks[participant].position} ${type}`)[0]);
     }
     delete tracks[participant][type];
-    if(!tracks[participant].audio && !tracks[participant].video) {
-        delete tracks[participant]
-    }
 }
 
 /**
@@ -148,10 +137,10 @@ function onConferenceJoined() {
  */
 function onUserJoin(id, user) {
     console.log(`user join - ${user.getDisplayName()}`);
-    let position = remoteMappingName.indexOf(user.getDisplayName());
-    if(position >= 0) {
-        console.log("user found");
-        trackMapping[id] = position;
+    tracks[id] = {
+        position: remoteMappingName.indexOf(user.getDisplayName())
+    };
+    if(tracks[id].position >= 0) {
         selectParticipants();
     }
     updateParticipantList();
@@ -163,15 +152,14 @@ function onUserJoin(id, user) {
  * @param displayName
  */
 function onNameChange(participant, displayName) {
-
     // detach this user from current position
     detachUser(participant);
     let position = remoteMappingName.indexOf(displayName);
 
     if(position >= 0 && tracks[participant]) {
         // detach user in the new position
-        for(let i in trackMapping) {
-            if(trackMapping[i] === position) {
+        for(let i in tracks) {
+            if(tracks[i].position === position) {
                 detachUser(i);
                 break;
             }
@@ -195,29 +183,45 @@ function onUserLeft(id) {
     selectParticipants()
 }
 
+/**
+ * Detaches the Tracks of participant with ID from it's position.
+ * @param id
+ */
 function detachUser(id) {
-    if (trackMapping[id] != null) {
+    if (tracks[id] != null) {
         console.log("detaching user " + id);
-        if(tracks[id] && tracks[id].video) {
-            tracks[id].video.detach($(`.video-${trackMapping[id]} video`)[0]);
-        }
-        if(tracks[id] && tracks[id].audio) {
-            tracks[id].audio.detach($(`.video-${trackMapping[id]} audio`)[0]);
-        }
-        delete trackMapping[id]
-    }
-}
-function attachUser(id, position) {
-    if (trackMapping[id] == null && tracks[id] != null) {
-        console.log(`attaching user ${id} to ${position}`);
-        trackMapping[id] = position;
-        if (tracks[id].video) {
-            let elemID = `.video-${position} video`;
-            tracks[id].video.attach($(elemID)[0]);
+        if(tracks[id].video) {
+            tracks[id].video.detach($(`.video-${tracks[id].position} video`)[0]);
         }
         if(tracks[id].audio) {
-            let elemID = `.video-${position} audio`;
-            tracks[id].audio.attach($(elemID)[0]);
+            tracks[id].audio.detach($(`.video-${tracks[id].position} audio`)[0]);
+        }
+        tracks[id].position = -1;
+    }
+}
+
+/**
+ * Attaches participant with ID to POSITION
+ * @param id
+ * @param position
+ */
+function attachUser(id, position) {
+    // check if track exists, and is not attached to another element already.
+    if (tracks[id] != null && tracks[id].position < 0) {
+        console.log(`attaching user ${id} to ${position}`);
+        // check if there is already some participant attached to this position and detach the tracks
+        for(let i in tracks) {
+            if(tracks.hasOwnProperty(i) && tracks[i].position === position) {
+                detachUser(i);
+            }
+        }
+        // finally attach new participant to position
+        tracks[id].position = position;
+        if (tracks[id].video) {
+            tracks[id].video.attach($(`.video-${tracks[id].position} video`)[0]);
+        }
+        if(tracks[id].audio) {
+            tracks[id].audio.attach($(`.video-${tracks[id].position} audio`)[0]);
         }
     }
 }
@@ -289,8 +293,6 @@ function connect(e) {
         if(!video.hasOwnProperty(i)) {
             continue;
         }
-        $('.volume-' + i + ' input[type="text"]')[0].value = remoteMappingName[i];
-        $('.video-' + i + ' .name').text(remoteMappingName[i]);
         $('.volume-' + i + ' input[type="range"]').val(0.7);
         $(video[i]).find('video').on('resize', onVideoResize).width(videoSize.width).height(videoSize.height);
     }
@@ -310,24 +312,12 @@ function unload() {
  * @param level
  */
 function setLevel(id, level) {
-    let track = $(`.video-${id} audio`)[0];
-    let volumeLabel = $('.volume-' + id + ' .volume');
-    track.volume = level;
-    volumeLabel.text(Math.round(level*100) + "%")
-}
-
-/**
- * Sets the volume level coming from MIDI input, also sets correct fader position to audio slider
- * @param id
- * @param level
- */
-function midiSetLevel(id, level) {
-    console.log(id, level);
-    if(id >= remoteMappingName.length) {
-        return;
+    if(id < remoteMappingName.length) {
+        let track = $(`.video-${id} audio`)[0];
+        $('.volume-' + id + ' .volume').text(Math.round(level*100) + "%");
+        $('.volume-' + id + ' input[type="range"]').val(level);
+        track.volume = level;
     }
-    setLevel(id, level);
-    $('.volume-' + id + ' input[type="range"]').val(level);
 }
 
 /**
@@ -339,8 +329,8 @@ function setName(position, name) {
     console.log(`setting name of ${position} to ${name}`);
     remoteMappingName[position] = name;
     $('.video-' + position + ' .name').text(name);
-    for(let i in trackMapping) {
-        if(trackMapping[i] === position) {
+    for(let i in tracks) {
+        if(tracks.hasOwnProperty(i) && tracks[i].position === position) {
             detachUser(i);
             break;
         }
