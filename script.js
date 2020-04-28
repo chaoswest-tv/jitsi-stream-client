@@ -55,7 +55,7 @@ function onMIDISuccess(midiData) {
     for (let input = allInputs.next(); input && !input.done; input = allInputs.next()) {
         // when a MIDI value is received call the onMIDIMessage function
         input.value.onmidimessage = (messageData ) => {
-            if(messageData.date[0] != 176) return;
+            if(messageData.data[0] != 176) return;
             midiSetLevel(messageData.data[1], Math.round(messageData[2]/127))
             console.log(messageData.data);
         };
