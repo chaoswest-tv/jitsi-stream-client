@@ -78,26 +78,6 @@ function selectParticipants() {
     room.selectParticipants(part);
 }
 /**
- *
- * @param participant
- * @param track
- * @param type
- */
-function setRemoteTrack(participant, track, type) {
-    if (tracks[participant] == null)
-        return;
-    console.log(`attaching ${type} track from ${participant}`);
-    if (type === 'video') {
-        tracks[participant].video = track;
-    } else {
-        tracks[participant].audio = track;
-    }
-    if(tracks[participant].audio && tracks[participant].video && tracks[participant].position >= 0) {
-        attachUser(participant, tracks[participant].position);
-    }
-}
-
-/**
  * Handles remote tracks
  * @param track JitsiTrack object
  */
@@ -106,8 +86,13 @@ function onRemoteTrack(track) {
         return;
     }
     const participant = track.getParticipantId();
+    if (tracks[participant] == null)
+        return;
     tracks[participant][track.getType()] = track;
-    setRemoteTrack(participant, track, track.getType());
+    console.log(`mapping ${track.getType()} track from ${participant}`);
+    if(tracks[participant].audio && tracks[participant].video && remoteMappingName.indexOf(room.getParticipantById(participant).getDisplayName().toLowerCase()) >= 0) {
+        attachUser(participant, remoteMappingName.indexOf(room.getParticipantById(participant).getDisplayName().toLowerCase()));
+    }
 }
 
 /**
@@ -140,10 +125,9 @@ function onConferenceJoined() {
  */
 function onUserJoin(id, user) {
     console.log(`user join - ${user.getDisplayName()}`);
-    tracks[id] = {
-        position: remoteMappingName.indexOf(user.getDisplayName())
-    };
-    if(tracks[id].position >= 0) {
+    tracks[id] = {position: -1};
+    console.log(tracks[id]);
+    if(remoteMappingName.indexOf(user.getDisplayName().toLowerCase()) >= 0) {
         selectParticipants();
     }
     updateParticipantList();
@@ -157,7 +141,7 @@ function onUserJoin(id, user) {
 function onNameChange(participant, displayName) {
     // detach this user from current position
     detachUser(participant);
-    let position = remoteMappingName.indexOf(displayName);
+    let position = remoteMappingName.indexOf(displayName.toLowerCase());
 
     if(position >= 0 && tracks[participant]) {
         // detach user in the new position
@@ -329,7 +313,7 @@ function setLevel(id, level) {
  */
 function setName(position, name) {
     console.log(`setting name of ${position} to ${name}`);
-    remoteMappingName[position] = name;
+    remoteMappingName[position] = name.toLowerCase();
     $('.video-' + position + ' .name').text(name);
     for(let i in tracks) {
         if(tracks.hasOwnProperty(i) && tracks[i].position === position) {
@@ -339,7 +323,7 @@ function setName(position, name) {
     }
     let participants = room.getParticipants();
     for(let i = 0; i < participants.length; i++) {
-        if(participants[i].getDisplayName() === name) {
+        if(participants[i].getDisplayName().toLowerCase() === name) {
             attachUser(participants[i].getId(), position);
             break;
         }
@@ -351,13 +335,14 @@ function setName(position, name) {
 function reload(position) {
     for(let i in tracks) {
         if(tracks.hasOwnProperty(i) && tracks[i].position === position) {
+            detachUser(i);
             attachUser(i, position);
         }
     }
 }
 
 function updateParticipantList() {
-    $('.available-users').text(room.getParticipants.map(p => p.getDisplayName()).join(', '));
+    $('.available-users').text(room.getParticipants().map(p => p.getDisplayName()).join(', '));
 }
 /**
  * Sets the output to the selected outputsource
