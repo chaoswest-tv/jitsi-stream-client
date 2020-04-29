@@ -138,7 +138,11 @@ function onUserJoin(id, user) {
 function onNameChange(participant, displayName) {
     // detach this user from current position
     detachUser(participant);
-    let position = remoteMappingName.indexOf(displayName.toLowerCase());
+    let position = -1;
+
+    if(displayName) {
+        position = remoteMappingName.indexOf(displayName.toLowerCase());
+    }
 
     if(position >= 0 && tracks[participant]) {
         // detach user in the new position
@@ -346,7 +350,7 @@ function leave() {
 }
 
 function updateParticipantList() {
-    $('.available-users').text(room.getParticipants().map(p => p.getDisplayName()).join(', '));
+    $('.available-users').text(room.getParticipants().map(p => p.getDisplayName() || 'Fellow Jitster').join(', '));
 }
 /**
  * Sets the output to the selected outputsource
