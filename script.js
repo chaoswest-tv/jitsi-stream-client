@@ -89,8 +89,13 @@ function onRemoteTrack(track) {
         return;
     tracks[participant][track.getType()] = track;
     console.log(`mapping ${track.getType()} track from ${participant}`);
-    if(tracks[participant].audio && tracks[participant].video && remoteMappingName.indexOf(room.getParticipantById(participant).getDisplayName().toLowerCase()) >= 0) {
-        attachUser(participant, remoteMappingName.indexOf(room.getParticipantById(participant).getDisplayName().toLowerCase()));
+    let displayName = room.getParticipantById(participant).getDisplayName() ? room.getParticipantById(participant).getDisplayName().toLowerCase(): undefined;
+    if(!displayName) {
+        return;
+    }
+    let desiredPosition = remoteMappingName.indexOf(displayName);
+    if(tracks[participant].audio && tracks[participant].video && desiredPosition >= 0) {
+        attachUser(participant, desiredPosition);
     }
 }
 
@@ -115,10 +120,11 @@ function onRemoteTrackRemove(track) {
  * @param user
  */
 function onUserJoin(id, user) {
-    console.log(`user join - ${user.getDisplayName()}`);
+    let displayName = user.getDisplayName() ? user.getDisplayName().toLowerCase() : undefined;
+    console.log(`user join - ${displayName}`);
     tracks[id] = {position: -1};
     console.log(tracks[id]);
-    if(remoteMappingName.indexOf(user.getDisplayName().toLowerCase()) >= 0) {
+    if(displayName && remoteMappingName.indexOf(displayName) >= 0) {
         selectParticipants();
     }
     updateParticipantList();
@@ -314,7 +320,8 @@ function setName(position, name) {
     }
     let participants = room.getParticipants();
     for(let i = 0; i < participants.length; i++) {
-        if(participants[i].getDisplayName().toLowerCase() === name) {
+
+        if(participants[i].getDisplayName() && participants[i].getDisplayName().toLowerCase() === name) {
             attachUser(participants[i].getId(), position);
             break;
         }
