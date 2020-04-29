@@ -312,8 +312,9 @@ function setLevel(id, level) {
  * @param name
  */
 function setName(position, name) {
+    name = name.toLowerCase();
     console.log(`setting name of ${position} to ${name}`);
-    remoteMappingName[position] = name.toLowerCase();
+    remoteMappingName[position] = name;
     $('.video-' + position + ' .name').text(name);
     for(let i in tracks) {
         if(tracks.hasOwnProperty(i) && tracks[i].position === position) {
