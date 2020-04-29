@@ -19,7 +19,6 @@ const videoSize = {
 };
 
 let connection = null;
-let isJoined = false;
 let room = null;
 
 // zu mappende namen.
@@ -108,14 +107,6 @@ function onRemoteTrackRemove(track) {
         tracks[participant][type].detach($(`.video-${tracks[participant].position} ${type}`)[0]);
     }
     delete tracks[participant][type];
-}
-
-/**
- * That function is executed when the conference is joined
- */
-function onConferenceJoined() {
-    console.log('conference joined!');
-    isJoined = true;
 }
 
 /**
@@ -267,7 +258,6 @@ function connect(e) {
     room.setDisplayName("Streamer");
     room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);
     room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, onRemoteTrackRemove);
-    room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, onConferenceJoined);
     room.on(JitsiMeetJS.events.conference.USER_JOINED, onUserJoin);
     room.on(JitsiMeetJS.events.conference.USER_LEFT, onUserLeft);
     room.on(JitsiMeetJS.events.conference.DISPLAY_NAME_CHANGED, onNameChange);
@@ -340,6 +330,12 @@ function reload(position) {
             attachUser(i, position);
         }
     }
+}
+
+function leave() {
+    room.leave();
+    $('#room').hide();
+    $('#room-selector').show();
 }
 
 function updateParticipantList() {
