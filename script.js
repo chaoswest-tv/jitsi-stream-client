@@ -232,8 +232,6 @@ function onVideoResize(event) {
     const video = $(event.target)[0];
     const width = video.videoWidth;
     const height = video.videoHeight;
-    const aspectRatio = width/height;
-    console.log(`${aspectRatio} is the aspect ratio`);
 
     let targetWidth = videoSize.width;
     let targetHeight = videoSize.height
@@ -367,7 +365,7 @@ function changeAudioOutput(selected) { // eslint-disable-line no-unused-vars
 $(window).bind('beforeunload', unload);
 $(window).bind('unload', unload);
 
-JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR);
+JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.WARN);
 
 JitsiMeetJS.init({});
 
