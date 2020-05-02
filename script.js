@@ -195,20 +195,24 @@ function detachUser(id) {
  */
 function attachUser(id, position) {
     // check if track exists, and is not attached to another element already.
-    if (tracks[id] != null && tracks[id].position < 0) {
+    if (tracks[id] != null && (tracks[id].position < 0 || tracks[id].position === position)) {
         console.log(`attaching user ${id} to ${position}`);
         // check if there is already some participant attached to this position and detach the tracks
-        for(let i in tracks) {
-            if(tracks.hasOwnProperty(i) && tracks[i].position === position) {
-                detachUser(i);
+        if(tracks[id].position !== position) {
+            for(let i in tracks) {
+                if(tracks.hasOwnProperty(i) && tracks[i].position === position) {
+                    detachUser(i);
+                }
             }
+            tracks[id].position = position;
         }
         // finally attach new participant to position
-        tracks[id].position = position;
-        if (tracks[id].video) {
+        if(tracks[id].video && tracks[id].video.containers.length === 0) {
+            console.log(`attaching video from user ${id} to ${position}`);
             tracks[id].video.attach($(`.video-${tracks[id].position} video`)[0]);
         }
-        if(tracks[id].audio) {
+        if(tracks[id].audio && tracks[id].audio.containers.length === 0) {
+            console.log(`attaching audio from user ${id} to ${position}`);
             tracks[id].audio.attach($(`.video-${tracks[id].position} audio`)[0]);
         }
     }
