@@ -2,11 +2,11 @@
 document.addEventListener('contextmenu', event => event.preventDefault());
 
 const options = {
-    serviceUrl: 'https://meet.theater.digital/http-bind',
+    serviceUrl: 'https://talk.chaoswest.tv/http-bind',
     hosts: {
 
-        domain: 'meet.theater.digital',
-        muc: 'conference.meet.theater.digital'
+        domain: 'talk.chaoswest.tv',
+        muc: 'conference.talk.chaoswest.tv'
     }
 };
 const confOptions = {
